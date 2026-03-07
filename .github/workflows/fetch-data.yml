@@ -23,5 +23,4 @@ jobs:
           git push
       - name: Purge jsDelivr cache
         run: |
-          # Replace with your repo details
           curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware/data.csv"
