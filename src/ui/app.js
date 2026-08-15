@@ -17,10 +17,15 @@ export class App {
     this.rangeSlider = null;
     this.selectedIds = new Set();
     this._rendering = false;
+    this._dataLoaded = false;
   }
 
   async mount(el) {
     this.el = el;
+    window.addEventListener('error', (e) => {
+      console.error('Global error:', e.error);
+      this._showError(String(e.error));
+    });
     try {
       await this._initData();
       this._initUI();
@@ -52,15 +57,21 @@ export class App {
   }
 
   _updateSelection(ids) {
-    this.selectedIds = new Set(ids);
-    this.picker.setSelected(ids);
-    this.builder.clear();
-    for (const id of ids) {
-      const meta = this.catalog.get(id);
-      if (meta) this.builder.add(id, meta);
+    try {
+      console.log('_updateSelection called with:', ids);
+      this.selectedIds = new Set(ids);
+      this.picker.setSelected(ids);
+      this.builder.clear();
+      for (const id of ids) {
+        const meta = this.catalog.get(id);
+        if (meta) this.builder.add(id, meta);
+      }
+      this.builder.render();
+      this._renderChart();
+    } catch (err) {
+      console.error('_updateSelection failed:', err);
+      this._showError(err.message);
     }
-    this.builder.render();
-    this._renderChart();
   }
 
   _initData() {
@@ -71,6 +82,7 @@ export class App {
       console.log('Catalog loaded:', Object.keys(catalog.datasets).length, 'datasets');
       this.loader = new DataLoader();
       this.comparison = new ComparisonManager(catalog, this.loader);
+      this._dataLoaded = true;
     });
   }
 
@@ -148,21 +160,29 @@ export class App {
       console.log('No series selected, skipping render');
       return;
     }
+    if (!this._dataLoaded) {
+      console.log('Data not loaded yet, skipping render');
+      return;
+    }
     this._rendering = true;
     console.log('Rendering chart with series:', Array.from(this.selectedIds));
     
     await new Promise(resolve => requestAnimationFrame(resolve));
     
-    this.comparison.clear();
-    for (const id of this.selectedIds) {
-      this.comparison.addSeries(id, []);
-    }
-    const from = new Date(this.rangeSlider.from, 0, 1).getTime();
-    const to = new Date(this.rangeSlider.to, 11, 31).getTime();
     try {
+      this.comparison.clear();
+      for (const id of this.selectedIds) {
+        this.comparison.addSeries(id, []);
+      }
+      const from = new Date(this.rangeSlider.from, 0, 1).getTime();
+      const to = new Date(this.rangeSlider.to, 11, 31).getTime();
+      
       const chart = await this.comparison.render('main-chart', this.controls.state.mode, from, to);
       console.log('Main chart rendered:', chart ? 'success' : 'no chart returned');
-      this._renderReturnsChart(from, to);
+      
+      if (chart) {
+        this._renderReturnsChart(from, to);
+      }
     } catch (err) {
       console.error('Chart render failed:', err);
       this._showError(err.message);
