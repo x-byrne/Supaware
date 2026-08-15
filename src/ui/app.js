@@ -16,6 +16,7 @@ export class App {
     this.controls = null;
     this.rangeSlider = null;
     this.selectedIds = new Set();
+    this._renderId = 0;
   }
 
   async mount(el) {
@@ -145,6 +146,7 @@ export class App {
       console.log('No series selected, skipping render');
       return;
     }
+    const renderId = ++this._renderId;
     this.comparison.clear();
     for (const id of this.selectedIds) {
       this.comparison.addSeries(id, []);
@@ -153,7 +155,14 @@ export class App {
     const to = new Date(this.rangeSlider.to, 11, 31).getTime();
     try {
       const chart = await this.comparison.render('main-chart', this.controls.state.mode, from, to);
+      if (renderId !== this._renderId) {
+        console.log('Stale render ignored:', renderId);
+        return;
+      }
       console.log('Main chart rendered:', chart ? 'success' : 'no chart returned');
+      if (!chart) {
+        this._showError('Chart failed to render. Check console for details.');
+      }
       this._renderReturnsChart(from, to);
     } catch (err) {
       console.error('Chart render failed:', err);

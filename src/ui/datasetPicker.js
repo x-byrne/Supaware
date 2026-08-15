@@ -19,7 +19,7 @@ export class DatasetPicker {
         const btn = document.createElement('button');
         btn.textContent = item.name;
         btn.dataset.id = item.id;
-        btn.addEventListener('pointerup', (e) => {
+        btn.addEventListener('click', (e) => {
           e.preventDefault();
           if (this.selected.has(item.id)) {
             this.selected.delete(item.id);
