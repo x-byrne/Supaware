@@ -18,6 +18,7 @@ export class App {
     this.selectedIds = new Set();
     this._rendering = false;
     this._dataLoaded = false;
+    this._renderTimeout = null;
   }
 
   async mount(el) {
@@ -165,6 +166,12 @@ export class App {
       return;
     }
     this._rendering = true;
+    if (this._renderTimeout) clearTimeout(this._renderTimeout);
+    this._renderTimeout = setTimeout(() => {
+      console.warn('Render timed out, resetting guard');
+      this._rendering = false;
+    }, 5000);
+    
     console.log('Rendering chart with series:', Array.from(this.selectedIds));
     
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -188,6 +195,7 @@ export class App {
       this._showError(err.message);
     } finally {
       this._rendering = false;
+      if (this._renderTimeout) clearTimeout(this._renderTimeout);
     }
   }
 
