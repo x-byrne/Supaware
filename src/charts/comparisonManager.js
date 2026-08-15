@@ -77,6 +77,11 @@ export class ComparisonManager {
       const meta = this.series.get(id).meta;
       let rows = allData[id];
       console.log(`Series ${id}: ${rows.length} rows before transform`);
+      
+      if (from !== undefined && to !== undefined) {
+        rows = rows.filter(r => r.period >= from && r.period <= to);
+      }
+      
       const pipeline = this.series.get(id).transformPipeline;
       for (const fn of pipeline) {
         if (fn === 'rebase') rows = rebase(rows);
@@ -86,10 +91,6 @@ export class ComparisonManager {
       if (mode === 'index') rows = rebase(rows);
       else if (mode === 'growth') rows = growth(rows, 1);
       else if (mode === 'ratio' && this.benchmarkId && id !== this.benchmarkId) rows = ratio(rows, benchmark);
-
-      if (from !== undefined && to !== undefined) {
-        rows = rows.filter(r => r.period >= from && r.period <= to);
-      }
 
       console.log(`Series ${id}: ${rows.length} rows after transform/filter`);
       const color = this._assignColor(i, id);
