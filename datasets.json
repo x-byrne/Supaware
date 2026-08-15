@@ -4,97 +4,111 @@
     "description": "High Growth investment option",
     "category": "Fund Types",
     "column": "High Growth",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "high_growth"
   },
   "high_growth_sc": {
     "name": "High Growth Socially Conscious",
     "description": "High Growth Socially Conscious investment option",
     "category": "Fund Types",
     "column": "High Growth Socially Conscious",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "high_growth_sc"
   },
   "high_growth_indexed": {
     "name": "High Growth Indexed",
     "description": "High Growth Indexed investment option",
     "category": "Fund Types",
     "column": "High Growth Indexed",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "high_growth_indexed"
   },
   "balanced": {
     "name": "Balanced",
     "description": "Balanced investment option",
     "category": "Fund Types",
     "column": "Balanced",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "balanced"
   },
   "balanced_sc": {
     "name": "Balanced Socially Conscious",
     "description": "Balanced Socially Conscious investment option",
     "category": "Fund Types",
     "column": "Balanced Socially Conscious",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "balanced_sc"
   },
   "balanced_indexed": {
     "name": "Balanced Indexed",
     "description": "Balanced Indexed investment option",
     "category": "Fund Types",
     "column": "Balanced Indexed",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "balanced_indexed"
   },
   "conservative_balanced": {
     "name": "Conservative Balanced",
     "description": "Conservative Balanced investment option",
     "category": "Fund Types",
     "column": "Conservative Balanced",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "conservative_balanced"
   },
   "conservative": {
     "name": "Conservative",
     "description": "Conservative investment option",
     "category": "Fund Types",
     "column": "Conservative",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "conservative"
   },
   "defensive": {
     "name": "Defensive",
     "description": "Defensive investment option",
     "category": "Fund Types",
     "column": "Defensive",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "defensive"
   },
   "australian_shares": {
     "name": "Australian Shares",
     "description": "Australian Shares asset class",
     "category": "Asset Classes",
     "column": "Australian Shares",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "australian_shares"
   },
   "international_shares": {
     "name": "International Shares",
     "description": "International Shares asset class",
     "category": "Asset Classes",
     "column": "International Shares",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "international_shares"
   },
   "property": {
     "name": "Property",
     "description": "Property asset class",
     "category": "Asset Classes",
     "column": "Property",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "property"
   },
   "bonds": {
     "name": "Bonds",
     "description": "Bonds asset class",
     "category": "Asset Classes",
     "column": "Bonds",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "bonds"
   },
   "cash": {
     "name": "Cash",
     "description": "Cash asset class",
     "category": "Asset Classes",
     "column": "Cash",
-    "file": "data/super/super.csv"
+    "file": "data/super/super.csv",
+    "id": "cash"
   }
 }
