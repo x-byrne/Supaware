@@ -18,7 +18,7 @@ export class ComparisonManager {
   async _ensureDataLoaded() {
     if (this._allData) return this._allData;
     const ds = this.catalog.get('high_growth');
-    const url = `./${ds.file}`;
+    const url = 'https://cdn.jsdelivr.net/gh/x-byrne/Supaware@main/data/super/super.csv';
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to load data: ${res.status}`);
     const text = await res.text();
