@@ -4,7 +4,6 @@ export class DatasetPicker {
     this.container = container;
     this.selected = new Set();
     this.onChange = () => {};
-    this._debounceTimer = null;
   }
   render() {
     const groups = this.catalog.listByCategory();
@@ -20,7 +19,7 @@ export class DatasetPicker {
         const btn = document.createElement('button');
         btn.textContent = item.name;
         btn.dataset.id = item.id;
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('pointerup', (e) => {
           e.preventDefault();
           if (this.selected.has(item.id)) {
             this.selected.delete(item.id);
@@ -29,10 +28,7 @@ export class DatasetPicker {
             this.selected.add(item.id);
             btn.classList.add('primary');
           }
-          if (this._debounceTimer) clearTimeout(this._debounceTimer);
-          this._debounceTimer = setTimeout(() => {
-            this.onChange(Array.from(this.selected));
-          }, 50);
+          this.onChange(Array.from(this.selected));
         });
         list.appendChild(btn);
       }
