@@ -20,6 +20,11 @@ export class App {
     this.el = el;
     await this._initData();
     this._initUI();
+    this._hideLoading();
+  }
+  _hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.add('hidden');
   }
   async _initData() {
     this.catalog = await DataCatalog.fromJSON('./datasets.json');

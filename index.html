@@ -120,31 +120,42 @@
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 2.5rem 2rem 4rem;
+      padding: 2.5rem 1.25rem 4rem;
     }
 
     .card {
       background: var(--card-bg);
       border: 1px solid var(--cream-dark);
       border-radius: 4px;
-      padding: 1.5rem;
+      padding: 1.25rem;
       box-shadow: var(--shadow);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
     .card h2 {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--ink-soft);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       padding-bottom: 0.5rem;
       border-bottom: 1px solid var(--rule);
     }
 
-    .grid { display: grid; gap: 1.5rem; }
+    .grid { display: grid; gap: 1.25rem; }
     .grid-2 { grid-template-columns: repeat(2, 1fr); }
-    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      main { padding: 1.5rem 1rem 3rem; }
+      header { padding: 1.75rem 1rem 1.5rem; }
+      .card { padding: 1rem; }
+      .chart-container { height: 300px; }
+    }
+    @media (max-width: 600px) {
+      .chart-container { height: 250px; }
+      button, select { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+      .tag { font-size: 0.72rem; padding: 0.3rem 0.5rem; }
+    }
 
     button, select {
       font-family: 'DM Sans', sans-serif;
@@ -236,9 +247,10 @@
       background: var(--cream);
       display: flex; align-items: center; justify-content: center;
       z-index: 100;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+      visibility: visible;
     }
-    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    #loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .loader-text {
       font-family: 'DM Mono', monospace;
       font-size: 0.8rem;
