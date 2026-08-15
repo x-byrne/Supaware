@@ -16,6 +16,7 @@ export class App {
     this.controls = null;
     this.rangeSlider = null;
     this.selectedIds = new Set();
+    this._renderId = 0;
     this._renderPromise = Promise.resolve();
   }
 
@@ -146,33 +147,36 @@ export class App {
   }
 
   async _renderChart() {
-    console.log('_renderChart called, selected:', Array.from(this.selectedIds));
     if (!this.selectedIds.size) {
       console.log('No series selected, skipping render');
       return;
     }
+    
     const renderId = ++this._renderId;
-    this.comparison.clear();
-    for (const id of this.selectedIds) {
-      this.comparison.addSeries(id, []);
-    }
     const from = new Date(this.rangeSlider.from, 0, 1).getTime();
     const to = new Date(this.rangeSlider.to, 11, 31).getTime();
-    try {
-      const chart = await this.comparison.render('main-chart', this.controls.state.mode, from, to);
-      if (renderId !== this._renderId) {
-        console.log('Stale render ignored:', renderId);
-        return;
+    
+    this._renderPromise = this._renderPromise.then(async () => {
+      if (renderId !== this._renderId) return;
+      
+      this.comparison.clear();
+      for (const id of this.selectedIds) {
+        this.comparison.addSeries(id, []);
       }
-      console.log('Main chart rendered:', chart ? 'success' : 'no chart returned');
-      if (!chart) {
-        this._showError('Chart failed to render. Check console for details.');
+      
+      try {
+        const chart = await this.comparison.render('main-chart', this.controls.state.mode, from, to);
+        if (renderId !== this._renderId) return;
+        console.log('Main chart rendered:', chart ? 'success' : 'no chart returned');
+        if (!chart) {
+          this._showError('Chart failed to render. Check console for details.');
+        }
+        this._renderReturnsChart(from, to);
+      } catch (err) {
+        console.error('Chart render failed:', err);
+        this._showError(err.message);
       }
-      this._renderReturnsChart(from, to);
-    } catch (err) {
-      console.error('Chart render failed:', err);
-      this._showError(err.message);
-    }
+    });
   }
 
   async _renderReturnsChart(from, to) {
