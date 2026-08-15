@@ -48,7 +48,7 @@ export class App {
   }
 
   _selectDefaults() {
-    const defaults = ['high_growth', 'balanced'];
+    const defaults = ['high_growth', 'balanced', 'conservative', 'australian_shares', 'bonds', 'cash'];
     this._updateSelection(defaults);
   }
 
