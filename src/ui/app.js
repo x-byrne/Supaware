@@ -16,6 +16,7 @@ export class App {
     this.controls = null;
     this.rangeSlider = null;
     this.selectedIds = new Set();
+    this._rendering = false;
   }
 
   async mount(el) {
@@ -139,11 +140,19 @@ export class App {
   }
 
   async _renderChart() {
+    if (this._rendering) {
+      console.log('Render in progress, skipping');
+      return;
+    }
     if (!this.selectedIds.size) {
       console.log('No series selected, skipping render');
       return;
     }
+    this._rendering = true;
     console.log('Rendering chart with series:', Array.from(this.selectedIds));
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
     this.comparison.clear();
     for (const id of this.selectedIds) {
       this.comparison.addSeries(id, []);
@@ -157,6 +166,8 @@ export class App {
     } catch (err) {
       console.error('Chart render failed:', err);
       this._showError(err.message);
+    } finally {
+      this._rendering = false;
     }
   }
 
