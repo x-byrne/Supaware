@@ -16,7 +16,7 @@ export class App {
     this.controls = null;
     this.rangeSlider = null;
     this.selectedIds = new Set();
-    this._renderId = 0;
+    this._renderPromise = Promise.resolve();
   }
 
   async mount(el) {
@@ -61,6 +61,10 @@ export class App {
       if (meta) this.builder.add(id, meta);
     }
     this.builder.render();
+    const statusEl = document.getElementById('selection-status');
+    if (statusEl) {
+      statusEl.textContent = `Selected: ${ids.length} series — ${ids.map(id => this.catalog.get(id)?.name || id).join(', ')}`;
+    }
     this._renderChart();
   }
 
@@ -89,6 +93,7 @@ export class App {
           </div>
           <div class="card">
             <h2>Comparison</h2>
+            <div id="selection-status" style="font-size:0.8rem;color:var(--ink-soft);margin-bottom:0.5rem;"></div>
             <div id="comparison-builder"></div>
           </div>
         </div>
