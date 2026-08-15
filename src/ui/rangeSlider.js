@@ -18,10 +18,7 @@ export class RangeSlider {
     track.className = 'track';
     const fill = document.createElement('div');
     fill.className = 'track-fill';
-    const fromPct = ((this.from - this.min) / (this.max - this.min)) * 100;
-    const toPct = ((this.to - this.min) / (this.max - this.min)) * 100;
-    fill.style.left = fromPct + '%';
-    fill.style.width = (toPct - fromPct) + '%';
+    this._updateFill(fill);
     const fromInput = document.createElement('input');
     fromInput.type = 'range';
     fromInput.min = this.min;
@@ -56,10 +53,15 @@ export class RangeSlider {
     this.container.appendChild(wrap);
     this.container.appendChild(label);
   }
+  setRange(from, to) {
+    this.from = from;
+    this.to = to;
+    this.render();
+  }
   _updateFill(fill) {
-    const newFromPct = ((this.from - this.min) / (this.max - this.min)) * 100;
-    const newToPct = ((this.to - this.min) / (this.max - this.min)) * 100;
-    fill.style.left = newFromPct + '%';
-    fill.style.width = (newToPct - newFromPct) + '%';
+    const fromPct = ((this.from - this.min) / (this.max - this.min)) * 100;
+    const toPct = ((this.to - this.min) / (this.max - this.min)) * 100;
+    fill.style.left = fromPct + '%';
+    fill.style.width = (toPct - fromPct) + '%';
   }
 }

@@ -142,8 +142,48 @@ export class App {
     this.rangeSlider = new RangeSlider(document.getElementById('range-slider'));
     this.rangeSlider.onChange = () => {
       console.log('Range onChange:', this.rangeSlider.from, '-', this.rangeSlider.to);
+      this._syncControlsFromRange();
       this._renderChart();
     };
+
+    this.controls.rangeSync = (range) => {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      let from = this.rangeSlider.min;
+      switch (range) {
+        case '1M':
+        case '3M':
+        case '6M': from = currentYear; break;
+        case '1Y': from = currentYear - 1; break;
+        case '5Y': from = currentYear - 5; break;
+        case 'All': from = this.rangeSlider.min; break;
+        default: from = currentYear - 1;
+      }
+      if (from < this.rangeSlider.min) from = this.rangeSlider.min;
+      this.rangeSlider.setRange(from, currentYear);
+    };
+  }
+
+  _syncControlsFromRange() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const from = this.rangeSlider.from;
+    const to = this.rangeSlider.to;
+    let active = 'All';
+    if (to === currentYear) {
+      if (from === currentYear) active = '1M';
+      else if (from >= currentYear - 1) active = '1Y';
+      else if (from >= currentYear - 5) active = '5Y';
+    }
+    this.controls.state.range = active;
+    const buttons = this.controls.container.querySelectorAll('button');
+    buttons.forEach(btn => {
+      if (btn.textContent === active) {
+        btn.classList.add('primary');
+      } else if (['1M', '3M', '6M', '1Y', '5Y', 'All'].includes(btn.textContent)) {
+        btn.classList.remove('primary');
+      }
+    });
   }
 
   async _renderChart() {
@@ -184,19 +224,54 @@ export class App {
     const ids = Array.from(this.selectedIds);
     try {
       const allData = await this.comparison._ensureDataLoaded();
-      const labels = [];
+      const periods = [
+        { label: '1Y', years: 1 },
+        { label: '3Y', years: 3 },
+        { label: '5Y', years: 5 },
+        { label: '10Y', years: 10 },
+        { label: 'All', years: null }
+      ];
+      const labels = periods.map(p => p.label);
       const datasets = [];
+      const now = Date.now();
 
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i];
         const meta = this.catalog.get(id);
-        const rows = allData[id].filter(r => r.period >= from && r.period <= to);
-        if (rows.length < 2) continue;
-        const totalReturn = ((rows[rows.length - 1].value / rows[0].value) - 1) * 100;
-        labels.push(meta.name);
+        const rows = allData[id];
+        const cagrs = [];
+
+        for (const period of periods) {
+          let startRow, endRow;
+          if (period.years) {
+            const targetStart = now - period.years * 365.25 * 86400000;
+            const candidates = rows.filter(r => r.period >= targetStart && r.period <= now);
+            if (candidates.length < 2) {
+              cagrs.push(null);
+              continue;
+            }
+            startRow = candidates[0];
+            endRow = candidates[candidates.length - 1];
+          } else {
+            if (rows.length < 2) {
+              cagrs.push(null);
+              continue;
+            }
+            startRow = rows[0];
+            endRow = rows[rows.length - 1];
+          }
+          const years = (endRow.period - startRow.period) / (365.25 * 86400000);
+          if (years <= 0 || startRow.value <= 0) {
+            cagrs.push(null);
+            continue;
+          }
+          const cagr = (Math.pow(endRow.value / startRow.value, 1 / years) - 1) * 100;
+          cagrs.push(parseFloat(cagr.toFixed(2)));
+        }
+
         datasets.push({
           label: meta.name,
-          data: [parseFloat(totalReturn.toFixed(2))],
+          data: cagrs,
           backgroundColor: PALETTE[i % PALETTE.length] + '33',
           borderColor: PALETTE[i % PALETTE.length],
           borderWidth: 2,
@@ -217,7 +292,7 @@ export class App {
             legend: { display: datasets.length > 1 },
             tooltip: {
               callbacks: {
-                label: ctx => ` Total Return: ${ctx.parsed.y > 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}%`
+                label: ctx => ` CAGR: ${ctx.parsed.y > 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}% p.a.`
               }
             }
           },

@@ -3,6 +3,7 @@ export class Controls {
     this.container = container;
     this.state = { mode: 'index', range: 'All' };
     this.onChange = () => {};
+    this.rangeSync = null;
   }
   render() {
     this.container.innerHTML = '';
@@ -18,12 +19,12 @@ export class Controls {
     row.style.gap = '1rem';
     row.style.alignItems = 'center';
     const modeGroup = this._segmentedControl('mode', modes, this.state.mode);
-    const rangeGroup = this._segmentedControl('range', ranges, this.state.range, true);
+    const rangeGroup = this._segmentedControl('range', ranges, this.state.range);
     row.appendChild(modeGroup);
     row.appendChild(rangeGroup);
     this.container.appendChild(row);
   }
-  _segmentedControl(name, options, active, isRange = false) {
+  _segmentedControl(name, options, active) {
     const wrap = document.createElement('div');
     wrap.style.display = 'flex';
     wrap.style.gap = '0.25rem';
@@ -38,6 +39,9 @@ export class Controls {
         btn.classList.add('primary');
         this.state[name] = value;
         this.onChange(this.state);
+        if (name === 'range' && this.rangeSync) {
+          this.rangeSync(value);
+        }
       });
       wrap.appendChild(btn);
     }
