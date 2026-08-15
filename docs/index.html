@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuperVis — Australian Superannuation Performance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:       #C8963E;
+      --gold-light: #E8B865;
+      --gold-pale:  #F5E6C8;
+      --ink:        #1A1812;
+      --ink-mid:    #3D3826;
+      --ink-soft:   #6B6348;
+      --cream:      #FAF7F0;
+      --cream-dark: #F0EBE0;
+      --teal:       #2A6B6B;
+      --teal-light: #3D9E9E;
+      --red:        #B84040;
+      --rule:       rgba(200,150,62,0.2);
+      --card-bg:    #FFFFFF;
+      --shadow:     0 2px 16px rgba(26,24,18,0.07);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--ink);
+      padding: 2.5rem 2rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 80px,
+        rgba(200,150,62,0.04) 80px,
+        rgba(200,150,62,0.04) 81px
+      );
+      pointer-events: none;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .header-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 400;
+      color: var(--cream);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    header h1 span { color: var(--gold-light); }
+    .header-sub {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: rgba(250,247,240,0.5);
+      font-weight: 300;
+    }
+    .header-meta {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .data-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(200,150,62,0.12);
+      border: 1px solid rgba(200,150,62,0.25);
+      border-radius: 3px;
+      padding: 0.3rem 0.7rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+    }
+    .data-badge .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--cream-dark);
+      border-radius: 4px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-soft);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .grid { display: grid; gap: 1.5rem; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    button, select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      border: 1px solid var(--cream-dark);
+      border-radius: 3px;
+      padding: 0.4rem 0.7rem;
+      background: transparent;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:hover { border-color: var(--gold); color: var(--gold); }
+    button.primary {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--cream);
+    }
+    button.primary:hover { background: var(--ink-mid); border-color: var(--ink-mid); color: var(--cream); }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--cream);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--ink-mid);
+    }
+    .tag button {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .tag button:hover { color: var(--red); }
+
+    .range-slider { position: relative; height: 40px; }
+    .range-slider input[type="range"] {
+      position: absolute;
+      width: 100%;
+      pointer-events: none;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: transparent;
+      outline: none;
+    }
+    .range-slider input[type="range"]::-webkit-slider-thumb {
+      pointer-events: auto;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: 2px solid #fff;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    .range-slider .track {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 6px;
+      background: var(--cream-dark);
+      border-radius: 3px;
+      width: 100%;
+    }
+    .range-slider .track-fill {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 6px;
+      background: var(--gold);
+      border-radius: 3px;
+    }
+    .chart-container { position: relative; height: 400px; }
+    .hidden { display: none !important; }
+
+    #loading-overlay {
+      position: fixed; inset: 0;
+      background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      transition: opacity 0.4s ease;
+    }
+    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loader-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+    }
+    #error-box {
+      display: none;
+      background: #FFF5F5;
+      border: 1px solid var(--red);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      font-size: 0.875rem;
+      color: var(--red);
+    }
+    #error-box.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div id="loading-overlay">
+    <span class="loader-text">LOADING SUPERANNUATION DATA…</span>
+  </div>
+  <div id="error-box"></div>
+  <div id="app"></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

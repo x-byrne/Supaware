@@ -1,0 +1,11 @@
+{
+  "name": "supaware",
+  "version": "0.1.0",
+  "description": "Australian Superannuation Visualisation Framework",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "deploy": "bash scripts/deploy-gh-pages.sh"
+  },
+  "license": "MIT"
+}
