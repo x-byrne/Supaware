@@ -115,6 +115,11 @@ export class App {
       this.builder.render();
       this._renderChart();
     };
+    this.builder.onRemove = (id) => {
+      this.picker.selected.delete(id);
+      this.picker._updateButtons();
+      this._renderChart();
+    };
     this.controls.onChange = () => this._renderChart();
     this.rangeSlider.onChange = () => this._renderChart();
   }
