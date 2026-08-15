@@ -15,7 +15,9 @@ export class App {
     this.builder = null;
     this.controls = null;
     this.rangeSlider = null;
+    this.selectedIds = new Set();
   }
+
   async mount(el) {
     this.el = el;
     try {
@@ -29,10 +31,12 @@ export class App {
       this._hideLoading();
     }
   }
+
   _hideLoading() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.add('hidden');
   }
+
   _showError(msg) {
     const box = document.getElementById('error-box');
     if (box) {
@@ -40,28 +44,35 @@ export class App {
       box.classList.add('visible');
     }
   }
+
   _selectDefaults() {
     const defaults = ['high_growth', 'balanced'];
-    this.picker.setSelected(defaults);
-    this.picker.onChange(Array.from(this.picker.selected));
+    this._updateSelection(defaults);
   }
-  _updatePickerButtons() {
-    document.querySelectorAll('#dataset-picker button').forEach(btn => {
-      if (this.picker.selected.has(btn.dataset.id)) {
-        btn.classList.add('primary');
-      } else {
-        btn.classList.remove('primary');
-      }
+
+  _updateSelection(ids) {
+    this.selectedIds = new Set(ids);
+    this.picker.setSelected(ids);
+    this.builder.clear();
+    for (const id of ids) {
+      const meta = this.catalog.get(id);
+      if (meta) this.builder.add(id, meta);
+    }
+    this.builder.render();
+    this._renderChart();
+  }
+
+  _initData() {
+    console.log('Loading datasets config...');
+    return DataCatalog.fromJSON('./datasets.json').then(catalog => {
+      this.catalog = catalog;
+      window.__catalog = catalog;
+      console.log('Catalog loaded:', Object.keys(catalog.datasets).length, 'datasets');
+      this.loader = new DataLoader();
+      this.comparison = new ComparisonManager(catalog, this.loader);
     });
   }
-  async _initData() {
-    console.log('Loading datasets config...');
-    this.catalog = await DataCatalog.fromJSON('./datasets.json');
-    window.__catalog = this.catalog;
-    console.log('Catalog loaded:', Object.keys(this.catalog.datasets).length, 'datasets');
-    this.loader = new DataLoader();
-    this.comparison = new ComparisonManager(this.catalog, this.loader);
-  }
+
   _initUI() {
     this.el.innerHTML = `
       <header class="app-header">
@@ -97,40 +108,44 @@ export class App {
         </div>
       </main>
     `;
+
     this.picker = new DatasetPicker(this.catalog, document.getElementById('dataset-picker'));
     this.picker.render();
+    this.picker.onChange = (ids) => {
+      console.log('Picker changed:', ids);
+      this._updateSelection(ids);
+    };
+
     this.builder = new ComparisonBuilder(document.getElementById('comparison-builder'));
+    this.builder.onRemove = (id) => {
+      console.log('Removing series:', id);
+      const next = new Set(this.selectedIds);
+      next.delete(id);
+      this._updateSelection(Array.from(next));
+    };
+
     this.controls = new Controls(document.getElementById('controls'));
     this.controls.render();
+    this.controls.onChange = () => {
+      console.log('Controls changed:', this.controls.state);
+      this._renderChart();
+    };
+
     this.rangeSlider = new RangeSlider(document.getElementById('range-slider'));
-    this._wireEvents();
-  }
-  _wireEvents() {
-    this.picker.onChange = (ids) => {
-      this.builder.clear();
-      for (const id of ids) {
-        const meta = this.catalog.get(id);
-        if (meta) this.builder.add(id, meta);
-      }
-      this.builder.render();
+    this.rangeSlider.onChange = () => {
+      console.log('Range changed:', this.rangeSlider.from, '-', this.rangeSlider.to);
       this._renderChart();
     };
-    this.builder.onRemove = (id) => {
-      this.picker.selected.delete(id);
-      this.picker._updateButtons();
-      this._renderChart();
-    };
-    this.controls.onChange = () => this._renderChart();
-    this.rangeSlider.onChange = () => this._renderChart();
   }
+
   async _renderChart() {
-    if (!this.picker.selected.size) {
+    if (!this.selectedIds.size) {
       console.log('No series selected, skipping render');
       return;
     }
-    console.log('Rendering chart with series:', Array.from(this.picker.selected));
+    console.log('Rendering chart with series:', Array.from(this.selectedIds));
     this.comparison.clear();
-    for (const id of this.picker.selected) {
+    for (const id of this.selectedIds) {
       this.comparison.addSeries(id, []);
     }
     const from = new Date(this.rangeSlider.from, 0, 1).getTime();
@@ -144,9 +159,10 @@ export class App {
       this._showError(err.message);
     }
   }
+
   async _renderReturnsChart(from, to) {
-    if (!this.picker.selected.size) return;
-    const ids = Array.from(this.picker.selected);
+    if (!this.selectedIds.size) return;
+    const ids = Array.from(this.selectedIds);
     try {
       const allData = await this.comparison._ensureDataLoaded();
       const labels = [];
