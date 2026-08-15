@@ -41,7 +41,8 @@ export class ComparisonManager {
           label: row['Date'],
           value: row[meta.column] === null ? null : parseFloat(row[meta.column])
         }))
-        .filter(r => r.period !== null && r.value !== null && !isNaN(r.value));
+        .filter(r => r.period !== null && r.value !== null && !isNaN(r.value))
+        .sort((a, b) => a.period - b.period);
     }
     console.log('Series prepared:', Object.keys(result).length);
     this._allData = result;
