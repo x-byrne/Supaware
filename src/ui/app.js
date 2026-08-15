@@ -18,17 +18,47 @@ export class App {
   }
   async mount(el) {
     this.el = el;
-    await this._initData();
-    this._initUI();
-    this._hideLoading();
+    try {
+      await this._initData();
+      this._initUI();
+      this._selectDefaults();
+      this._hideLoading();
+    } catch (err) {
+      console.error('App mount failed:', err);
+      this._showError(err.message);
+      this._hideLoading();
+    }
   }
   _hideLoading() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.add('hidden');
   }
+  _showError(msg) {
+    const box = document.getElementById('error-box');
+    if (box) {
+      box.textContent = `Error: ${msg}`;
+      box.classList.add('visible');
+    }
+  }
+  _selectDefaults() {
+    const defaults = ['high_growth', 'balanced'];
+    this.picker.setSelected(defaults);
+    this.picker.onChange(Array.from(this.picker.selected));
+  }
+  _updatePickerButtons() {
+    document.querySelectorAll('#dataset-picker button').forEach(btn => {
+      if (this.picker.selected.has(btn.dataset.id)) {
+        btn.classList.add('primary');
+      } else {
+        btn.classList.remove('primary');
+      }
+    });
+  }
   async _initData() {
+    console.log('Loading datasets config...');
     this.catalog = await DataCatalog.fromJSON('./datasets.json');
     window.__catalog = this.catalog;
+    console.log('Catalog loaded:', Object.keys(this.catalog.datasets).length, 'datasets');
     this.loader = new DataLoader();
     this.comparison = new ComparisonManager(this.catalog, this.loader);
   }
@@ -89,69 +119,84 @@ export class App {
     this.rangeSlider.onChange = () => this._renderChart();
   }
   async _renderChart() {
-    if (!this.picker.selected.size) return;
+    if (!this.picker.selected.size) {
+      console.log('No series selected, skipping render');
+      return;
+    }
+    console.log('Rendering chart with series:', Array.from(this.picker.selected));
     this.comparison.clear();
     for (const id of this.picker.selected) {
       this.comparison.addSeries(id, []);
     }
     const from = new Date(this.rangeSlider.from, 0, 1).getTime();
     const to = new Date(this.rangeSlider.to, 11, 31).getTime();
-    await this.comparison.render('main-chart', this.controls.state.mode, from, to);
-    this._renderReturnsChart(from, to);
+    try {
+      const chart = await this.comparison.render('main-chart', this.controls.state.mode, from, to);
+      console.log('Main chart rendered:', chart ? 'success' : 'no chart returned');
+      this._renderReturnsChart(from, to);
+    } catch (err) {
+      console.error('Chart render failed:', err);
+      this._showError(err.message);
+    }
   }
   async _renderReturnsChart(from, to) {
     if (!this.picker.selected.size) return;
     const ids = Array.from(this.picker.selected);
-    const allData = await this.comparison._ensureDataLoaded();
-    const labels = [];
-    const datasets = [];
+    try {
+      const allData = await this.comparison._ensureDataLoaded();
+      const labels = [];
+      const datasets = [];
 
-    for (let i = 0; i < ids.length; i++) {
-      const id = ids[i];
-      const meta = this.catalog.get(id);
-      const rows = allData[id].filter(r => r.period >= from && r.period <= to);
-      if (rows.length < 2) continue;
-      const totalReturn = ((rows[rows.length - 1].value / rows[0].value) - 1) * 100;
-      labels.push(meta.name);
-      datasets.push({
-        label: meta.name,
-        data: [parseFloat(totalReturn.toFixed(2))],
-        backgroundColor: PALETTE[i % PALETTE.length] + '33',
-        borderColor: PALETTE[i % PALETTE.length],
-        borderWidth: 2,
-        borderRadius: 4
-      });
-    }
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const meta = this.catalog.get(id);
+        const rows = allData[id].filter(r => r.period >= from && r.period <= to);
+        if (rows.length < 2) continue;
+        const totalReturn = ((rows[rows.length - 1].value / rows[0].value) - 1) * 100;
+        labels.push(meta.name);
+        datasets.push({
+          label: meta.name,
+          data: [parseFloat(totalReturn.toFixed(2))],
+          backgroundColor: PALETTE[i % PALETTE.length] + '33',
+          borderColor: PALETTE[i % PALETTE.length],
+          borderWidth: 2,
+          borderRadius: 4
+        });
+      }
 
-    const canvas = document.getElementById('returns-chart');
-    if (!canvas) return;
-    if (window.returnsChart) window.returnsChart.destroy();
-    window.returnsChart = new Chart(canvas, {
-      type: 'bar',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: datasets.length > 1 },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` Total Return: ${ctx.parsed.y > 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}%`
+      const canvas = document.getElementById('returns-chart');
+      if (!canvas) return;
+      if (window.returnsChart) window.returnsChart.destroy();
+      window.returnsChart = new Chart(canvas, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: datasets.length > 1 },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` Total Return: ${ctx.parsed.y > 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}%`
+              }
             }
-          }
-        },
-        scales: {
-          x: { grid: { display: false } },
-          y: {
-            grid: { color: 'rgba(26,24,18,0.06)' },
-            ticks: {
-              font: { family: "'DM Mono', monospace", size: 11 },
-              callback: v => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              grid: { color: 'rgba(26,24,18,0.06)' },
+              ticks: {
+                font: { family: "'DM Mono', monospace", size: 11 },
+                callback: v => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`
+              }
             }
           }
         }
-      }
-    });
+      });
+      console.log('Returns chart rendered');
+    } catch (err) {
+      console.error('Returns chart render failed:', err);
+    }
   }
 }
 

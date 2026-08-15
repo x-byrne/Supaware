@@ -35,5 +35,17 @@ export class DatasetPicker {
       this.container.appendChild(section);
     }
   }
-  setSelected(ids) { this.selected = new Set(ids); }
+  setSelected(ids) {
+    this.selected = new Set(ids);
+    this._updateButtons();
+  }
+  _updateButtons() {
+    this.container.querySelectorAll('button').forEach(btn => {
+      if (this.selected.has(btn.dataset.id)) {
+        btn.classList.add('primary');
+      } else {
+        btn.classList.remove('primary');
+      }
+    });
+  }
 }
