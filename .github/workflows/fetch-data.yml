@@ -27,5 +27,5 @@ jobs:
           git push
       - name: Purge jsDelivr cache
         run: |
-          curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware/data/super/super.csv"
-          curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware/data.csv"
+          curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware@main/data/super/super.csv"
+          curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware@main/data.csv"
