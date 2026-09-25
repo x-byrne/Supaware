@@ -14,13 +14,18 @@ jobs:
       - name: Fetch CSV
         run: |
           curl -L "https://aware.com.au/bin/unitPriceExport?category=FUTURE_SAVER" -o data.csv
+      - name: Copy to super data directory
+        run: |
+          mkdir -p data/super
+          cp data.csv data/super/super.csv
       - name: Commit and Push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.csv
+          git add data.csv data/super/super.csv
           git commit -m "Update data" || echo "No changes"
           git push
       - name: Purge jsDelivr cache
         run: |
+          curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware/data/super/super.csv"
           curl -X PURGE "https://purge.jsdelivr.net/gh/x-byrne/Supaware/data.csv"
